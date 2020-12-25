@@ -70,7 +70,7 @@ if __name__ == '__main__':
     # pretrained = 'voidful/albert_chinese_tiny'  #Use small version of Albert
     # pretrained = './models/albert_chinese_tiny' 
     # pretrained = 'clue/albert_chinese_small'
-    pretrained = './models/albert_chinese_tiny' 
+    pretrained = './models/albert_chinese_small' 
     tokenizer = BertTokenizer.from_pretrained(pretrained)
     model=AlbertModel.from_pretrained(pretrained)
     config=AlbertConfig.from_pretrained(pretrained)
@@ -86,8 +86,36 @@ if __name__ == '__main__':
     print("="*10)
     
     # freeze all the parameters
+    # print(type(model.children))
+    # for child in model.children():
+    #     print("--"*10)
+    #     print(child)
+    #     for param in child.parameters():
+    #         print("=="*10)
+    #         print(param.requires_grad)
+    #         param.requires_grad = False
+    # print("*"*10)
+    # print(model)
+    
+    print(type(model.children))
     for param in model.parameters():
         param.requires_grad = False
+
+    print(" * "*10)
+    print(model)
+    print(" * "*10)
+
+    model.pooler.weight.requires_grad = True
+    model.pooler.bias.requires_grad = True
+    
+    # print out the status of the parameters in each layer
+    for cnme,child in model.named_children():
+        print("--"*10)
+        print(cnme,":",child)
+        for nme,param in child.named_parameters():
+            print(nme,":",param.requires_grad)
+    
+    # sys.exit()
 
     sentiment_cls=SentimentClassfier(model,config,2)
     device=torch.device("cuda:0") if torch.cuda.is_available() else 'cpu'
@@ -118,6 +146,7 @@ if __name__ == '__main__':
     for epoch in range(100):
         loss_sum=0.0
         accu=0
+        # set to training mode
         sentiment_cls.train()
         for step,(token_ids,label) in enumerate(train_dataloader):
             token_ids=token_ids.to(device)
@@ -131,6 +160,7 @@ if __name__ == '__main__':
             accu+=(out.argmax(1)==label).sum().cpu().data.numpy()
         test_loss_sum=0.0
         test_accu=0
+        # set to evaluation mode
         sentiment_cls.eval()
         for step,(token_ids,label) in enumerate(test_dataloader):
             token_ids=token_ids.to(device)
