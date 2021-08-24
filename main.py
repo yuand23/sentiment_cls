@@ -17,7 +17,7 @@ class SentimentClassfier(torch.nn.Module):
         self.fc1=torch.nn.Linear(bert_config.hidden_size,64)
         self.fc2=torch.nn.Linear(64,num_class)
         self.relu=torch.nn.ReLU()
-        #self.softmax = torch.nn.LogSoftmax(dim=1) 加不加没有影响torch.nn.CrossEntropyLoss() = LogSoftmax + NLLLoss
+        #self.softmax = torch.nn.LogSoftmax(dim=1) # 加不加没有影响torch.nn.CrossEntropyLoss() = LogSoftmax + NLLLoss
     def forward(self,token_ids):
         bert_out=self.bert_model(token_ids)[1] #Sentence vector [batch_size,hidden_size]
         bert_out=self.fc1(bert_out) 
